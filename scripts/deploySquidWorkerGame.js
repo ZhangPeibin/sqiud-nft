@@ -6,7 +6,7 @@ const { ethers, upgrades } = require(`hardhat`);
 const fs = require('fs')
 
 
-const toBN = (numb, power) =>  ethers.BigNumber.from(10).pow(power).mul(numb);
+const toBN = (numb, power= 1) =>  ethers.BigNumber.from(10).pow(power).mul(numb);
 
 
 //game initialize parameters

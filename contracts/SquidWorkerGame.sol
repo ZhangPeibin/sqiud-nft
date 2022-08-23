@@ -35,6 +35,8 @@ interface IautoBsw {
 contract SquidWorkerGame is Initializable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    uint constant LAST_WEEK_NUMBER = 2747;
+
     struct Worker {
         uint32 startBlock;
         uint32 finishBlock;
@@ -186,7 +188,8 @@ contract SquidWorkerGame is Initializable, AccessControlUpgradeable, ReentrancyG
     }
 
     function getCurrentWeek() public view returns(uint){
-        return block.timestamp/7 days;
+        uint actualWeek = (block.timestamp - 43200) / 7 days;
+        return actualWeek > LAST_WEEK_NUMBER ? LAST_WEEK_NUMBER : actualWeek;//2746, 2747, 2747...
     }
 
     function closeQueueByIndex(uint[] memory _index) external nonReentrant whenNotPaused notContract {
@@ -289,12 +292,12 @@ contract SquidWorkerGame is Initializable, AccessControlUpgradeable, ReentrancyG
     }
 
     function getUserInfo(address _user) external view returns(UserInfoFront memory info, InfoWorker memory pendingWorker) {
-        info.price = price;
-        info.priceInUSDT = _getPriceInUSDT(price);
-        info.totalWorkersLimit = getAdjustedPeriodLimit();//weeklyWorkersLimit[block.timestamp / 7 days];
-        info.totalHireWorkers = totalHireWorkers[block.timestamp / 7 days];
-        info.maxWorkersPerUser = maxWorkersPerUser;
-        info.timeLeft = getTimeLeftForNewLimit();//7 days - block.timestamp % 7 days;
+        info.price              = price;
+        info.priceInUSDT        = _getPriceInUSDT(price);
+        info.totalWorkersLimit  = weeklyWorkersLimit[LAST_WEEK_NUMBER];//weeklyWorkersLimit[getCurrentWeek()];
+        info.totalHireWorkers   = totalHireWorkers[LAST_WEEK_NUMBER];
+        info.maxWorkersPerUser  = maxWorkersPerUser;
+        info.timeLeft           = getTimeLeftForNewLimit();
         info.earlyWithdrawalFee = earlyWithdrawalFee;
         info.minStakedAmount = minStakeAmount;
         info.userStakedAmount =  autoBsw.balanceOf() * autoBsw.userInfo(_user).shares / autoBsw.totalShares();
@@ -334,8 +337,8 @@ contract SquidWorkerGame is Initializable, AccessControlUpgradeable, ReentrancyG
             closeQueue(2);
         }
         require(workers[msg.sender].length < maxWorkersPerUser, "Workers by user over limit");
-        require(totalHireWorkers[block.timestamp / 7 days] < getAdjustedPeriodLimit(), "Workers over limit by current period");
-        totalHireWorkers[block.timestamp / 7 days] += 1;
+        require(totalHireWorkers[getCurrentWeek()] < weeklyWorkersLimit[getCurrentWeek()], "Workers over limit by current period");
+        totalHireWorkers[getCurrentWeek()] += 1;
         uint128 currentPrice = price;
         bswToken.safeTransferFrom(msg.sender, address(this), currentPrice);
         userQueues[msg.sender] = true;
@@ -344,16 +347,8 @@ contract SquidWorkerGame is Initializable, AccessControlUpgradeable, ReentrancyG
         emit PushWorkerToQueue(msg.sender, block.number);
     }
 
-    function getAdjustedPeriodLimit() public view returns (uint) {
-        uint thisWeekLimit = weeklyWorkersLimit[getCurrentWeek()];
-        uint adjustedPeriod = ((block.timestamp % 7 days) / 12 hours) + 1; //1,2,3,4, ...
-        return adjustedPeriod > 1 ? thisWeekLimit : adjustedPeriod * thisWeekLimit / 2;
-    }
-
     function getTimeLeftForNewLimit() public view returns(uint){
-        uint secondsOfCurrentWeek = block.timestamp % 7 days;
-        uint adjustedPeriod = (secondsOfCurrentWeek / 12 hours) + 1; //1,2,3,4, ...
-        return adjustedPeriod > 1 ? 7 days - secondsOfCurrentWeek : adjustedPeriod * 12 hours - secondsOfCurrentWeek;
+        return getCurrentWeek() == LAST_WEEK_NUMBER ? 0 : 1661428800;//Thu, 25 Aug 2022 12:00:00 GMT
     }
 
     function claimWorker(uint _index) external nonReentrant notContract whenNotPaused holderPoolCheck {
