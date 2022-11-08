@@ -16,13 +16,13 @@ async function main() {
 
     console.log(`Start upgrade Bus NFT contract`);
     const BusNFT = await ethers.getContractFactory(`SquidBusNFT`);
-    const busNft = await upgrades.upgradeProxy(busNFTAddress, BusNFT,  {nonce: ++nonce, gasLimit: 5000000});
+    const busNft = await upgrades.upgradeProxy(busNFTAddress, BusNFT);
     await busNft.deployed();
     console.log(`Bus NFT upgraded`);
 
     console.log(`Start upgrade Bus NFT contract`);
     const PlayerNFT = await ethers.getContractFactory(`SquidBusNFT`);
-    const playerNft = await upgrades.upgradeProxy(playerNFTAddress, PlayerNFT,  {nonce: ++nonce, gasLimit: 5000000});
+    const playerNft = await upgrades.upgradeProxy(playerNFTAddress, PlayerNFT);
     await playerNft.deployed();
     console.log(`Player NFT upgraded`);
 
