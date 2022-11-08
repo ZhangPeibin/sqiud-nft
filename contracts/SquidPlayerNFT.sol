@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-
 contract SquidPlayerNFT is
     Initializable,
     ERC721EnumerableUpgradeable,
@@ -17,6 +16,7 @@ contract SquidPlayerNFT is
     bytes32 public constant GAME_ROLE = keccak256("GAME_ROLE");
     bytes32 public constant SE_BOOST_ROLE = keccak256("SE_BOOST_ROLE");
     bytes32 public constant TOKEN_FREEZER = keccak256("TOKEN_FREEZER");
+    bytes32 public constant COLLECTIBLES_CHANGER = keccak256("COLLECTIBLES_CHANGER");
 
     string private _internalBaseURI;
     uint private _lastTokenId;
@@ -139,6 +139,21 @@ contract SquidPlayerNFT is
             tokenSeAmount[i] = _tokens[_tokenId[i]].squidEnergy;
             totalSeAmount += _tokens[_tokenId[i]].squidEnergy;
         }
+    }
+
+    function burnForCollectibles(address user, uint[] calldata tokenId)
+        external
+        onlyRole(COLLECTIBLES_CHANGER)
+        returns (uint burnedSEAmount)
+    {
+        for (uint i = 0; i < tokenId.length; i++) {
+            require(_exists(tokenId[i]), "ERC721: token does not exist");
+            require(ownerOf(tokenId[i]) == user, "Not token owner");
+            Token memory curToken = _tokens[tokenId[i]];
+            burnedSEAmount += curToken.squidEnergy;
+            _burn(tokenId[i]);
+        }
+        return burnedSEAmount;
     }
 
     //Public functions ----------------------------------------------------------------------------------------------

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-
 contract SquidBusNFT is
     Initializable,
     ERC721EnumerableUpgradeable,
@@ -14,6 +13,7 @@ contract SquidBusNFT is
     ReentrancyGuardUpgradeable
 {
     bytes32 public constant TOKEN_MINTER_ROLE = keccak256("TOKEN_MINTER");
+    bytes32 public constant COLLECTIBLES_CHANGER = keccak256("COLLECTIBLES_CHANGER");
 
     uint public minBusBalance; // min bus balance by user on start
     uint public maxBusBalance; // max bus balance after bus addition period
@@ -77,6 +77,20 @@ contract SquidBusNFT is
 
     function setBaseURI(string calldata newBaseUri) external onlyRole(DEFAULT_ADMIN_ROLE) {
         internalBaseURI = newBaseUri;
+    }
+
+    function burnForCollectibles(address user, uint[] calldata tokenId)
+        external
+        onlyRole(COLLECTIBLES_CHANGER)
+        returns (uint burnedBusCapacity)
+    {
+        for (uint i = 0; i < tokenId.length; i++) {
+            require(_exists(tokenId[i]), "ERC721: token does not exist");
+            require(ownerOf(tokenId[i]) == user, "Not token owner");
+            burnedBusCapacity += tokens[tokenId[i]].level;
+            _burn(tokenId[i]);
+        }
+        return burnedBusCapacity;
     }
 
     //Public functions --------------------------------------------------------------------------------------------
