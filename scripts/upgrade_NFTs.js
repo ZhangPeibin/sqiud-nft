@@ -19,12 +19,12 @@ async function main() {
         return;
     }
 
-    console.log(`Start upgrade Bus NFT contract`);
-    const BusNFT = await ethers.getContractFactory(`SquidBusNFT`, deployer);
-    // await upgrades.forceImport(busNFTAddress, BusNFT);
-    const busNft = await upgrades.upgradeProxy(busNFTAddress, BusNFT);
-    await busNft.deployed();
-    console.log(`Bus NFT upgraded`);
+    // console.log(`Start upgrade Bus NFT contract`);
+    // const BusNFT = await ethers.getContractFactory(`SquidBusNFT`, deployer);
+    // // await upgrades.forceImport(busNFTAddress, BusNFT);
+    // const busNft = await upgrades.upgradeProxy(busNFTAddress, BusNFT);
+    // await busNft.deployed();
+    // console.log(`Bus NFT upgraded`);
 
     console.log(`Start upgrade SquidPlayer NFT contract`);
     const PlayerNFT = await ethers.getContractFactory(`SquidPlayerNFT`, deployer);
